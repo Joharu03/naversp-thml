@@ -1,161 +1,211 @@
-<!DOCTYPE html> 
-<html lang="ko"> 
-   <head> 
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Fluid Particle Texture Effect</title>
-      <style>
-         * {
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluid Particle Texture Effect</title>
+    <style>
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-         } 
-         body 
-         { background-color: #0b0b0b;
-          overflow: hidden;
-          width: 100vw; height: 100vh;
-          cursor: grab; } 
-         body:active 
-         { cursor: grabbing;
-                     }
-         canvas 
-         { display: block;
-          width: 100%;
-          height: 100%;
-         }
-      </style>
-   </head> 
-   <body>
-      <canvas id="particleCanvas">
-         
-      </canvas>
-      <script>
-         const canvas = document.getElementById('particleCanvas'); 
-         const ctx = canvas.getContext('2d'); 
-         // ìº”ë²„ìŠ¤ í�¬ê¸° ì„¤ì
-         function resizeCanvas() { canvas.width = window.innerWidth;
-                                  canvas.height = window.innerHeight;
-                                 } resizeCanvas();
-         window.addEventListener('resize', resizeCanvas);
-         // ë§ˆìš°ìŠ¤ ë°� ë“œëž˜ê·¸ ìƒ�íƒœ ê´€ë¦¬
-         const mouse = { x: null, y: null, px: null,
-                        // ì�´ì „ 
-                        x py: null,
-                        // ì�´ì „
-                        y vx: 0,
-                        // ë§ˆìš°ìŠ¤ ì†�ë�„
-                        x vy: 0, 
-                        // ë§ˆìš°ìŠ¤ ì†�ë�„ 
-                        y isDragging: false };
-         const settings = { particleCount: 1200, 
-                           // ìž…ìž� ê°œìˆ˜ (ë°€ë�„ ì¡°ì ˆ) 
-                           particleRadius: 2.5, 
-                           // ìž…ìž� í�¬ê¸°
-                           mouseRadius: 100,
-                           // ë§ˆìš°ìŠ¤ ì˜�í–¥ ë²”ìœ„
-                           forceFactor: 0.15, 
-                           // ë°€ì–´ë‚´ëŠ” íž˜ì�˜ ê°•ë�„
-                           viscosity: 0.94,
-                           // ì �ì„± (ì �ë�„ê°€ ë†’ì�„ìˆ˜ë¡� ë�ˆì �í•˜ê²Œ ëŠ�ë ¤ì§�)
-                           spring: 0.02
-                              // ì›�ëž˜ ìž�ë¦¬ë¡œ ë�Œì•„ê°€ë ¤ëŠ” ë³µì›�ë ¥
-                              };
-                              const particles = [];
-         // ìž…ìž�(Particle) í�´ëž˜ìŠ¤ ì •ì�˜
-         class Particle { constructor(x, y) { this.baseX = x; 
-                                             // ì›�ëž˜ ìœ„ì¹˜
-                                             this.baseY = y; this.x = x;
-                                             // í˜„ìž¬ ìœ„ì¹˜
-                                             this.y = y; this.vx = 0;
-                                             // ì�´ë�™ ì†�ë�„
-                                             this.vy = 0; } update() { 
-            // 1. ì›�ëž˜ ìž�ë¦¬ë¡œ ë�Œì•„ê°€ë ¤ëŠ” ë³µì›�ë ¥ (íƒ„ì„±)
-            let dxBase = this.baseX - this.x;
-            let dyBase = this.baseY - this.y;
-            this.vx += dxBase * settings.spring;
-            this.vy += dyBase * settings.spring;
-            // 2. ë§ˆìš°ìŠ¤ ë“œëž˜ê·¸ ì‹œ ë°˜ì�‘ (ìœ ì²´ ì§ˆê°�ì�˜ í•µì‹¬)
-            if (mouse.x !== null && mouse.isDragging) { let dxMouse = this.x - mouse.x;
-                                                       let dyMouse = this.y - mouse.y;
-                                                       let distance = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse); 
-                                                       if (distance < settings.mouseRadius){ 
-                                                          // ê±°ë¦¬ì—� ë°˜ë¹„ë¡€í•˜ëŠ” íž˜ ê³„ì‚°
-                                                          let force = (settings.mouseRadius - distance) / settings.mouseRadius;
-                                                          // ë§ˆìš°ìŠ¤ê°€ ì›€ì§�ì�´ëŠ” ë°©í–¥ê³¼ ì†�ë�„ë¥¼ ìž…ìž�ì—� ì „ë‹¬ 
-                                                          this.vx += (dxMouse / distance) * force * settings.forceFactor * 15;
-                                                          this.vy += (dyMouse / distance) * force * settings.forceFactor * 15;
-                                                          // ë§ˆìš°ìŠ¤ ë“œëž˜ê·¸ ì†�ë�„(ë¬¼ë¦¬ëŸ‰) ì¶”ê°€ ë°˜ì˜� 
-                                                          this.vx += mouse.vx * force * 0.2; this.vy += mouse.vy * force * 0.2; } } 
-            // 3. ì �ì„± ë°� ë§ˆì°°ë ¥ ì �ìš© í›„ ìœ„ì¹˜ ì—…ë�°ì�´íŠ¸
-            this.vx *= settings.viscosity;
-            this.vy *= settings.viscosity;
-            this.x += this.vx;
-            this.y += this.vy;
-         } draw() {
-            // ì˜�ìƒ� íŠ¹ìœ ì�˜ ì�€ì�€í•˜ê³  ë¯¸ì„¸í•œ ì§ˆê°�ì�„ ìœ„í•œ íˆ¬ëª…ë�„ ë°� ìƒ‰ìƒ� ì„¤ì • 
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, settings.particleRadius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(240, 240, 245, 0.85)'; 
-            ctx.fill(); } } 
-         // ìž…ìž� ê²©ìž� í˜•íƒœë¡œ ì´ˆê¸° ë°°ì¹˜ 
-         function init() { particles.length = 0;
-                          // í™”ë©´ ì „ì²´ì—� ì´˜ì´˜í•˜ê²Œ ë°°ì¹˜í•˜ê¸° ìœ„í•´ ê°„ê²© ê³„ì‚° 
-                          const cols = Math.floor(Math.sqrt(settings.particleCount * (canvas.width / canvas.height)));
-                          const rows = Math.floor(settings.particleCount / cols);
-                          const spacingX = canvas.width / (cols + 1); 
-                          const spacingY = canvas.height / (rows + 1); 
-                          for (let i = 0;
-                               i < cols; i++) { for (let j = 0;
-                                                     j < rows; j++) { let x = spacingX + i * spacingX + (Math.random() * 4 - 2);
-                                                                     // ë¯¸ì„¸í•œ ë¬´ìž‘ìœ„ì„± ë¶€ì—¬ 
-                                                                     let y = spacingY + j * spacingY + (Math.random() * 4 - 2);
-                                                                     particles.push(new Particle(x, y)); } } }
-         // ì• ë‹ˆë©”ì�´ì…˜ ë£¨í”„ 
-         function animate() { 
-            // ë¯¸ì„¸í•œ ìž”ìƒ�ì�„ ë‚¨ê²¨ ìœ ì²´ ëŠ�ë‚Œì�„ ê·¹ëŒ€í™” (ë§¤ í”„ë ˆìž„ ë°˜íˆ¬ëª…í•˜ê²Œ ë�®ì�Œ)
+        }
+        body {
+            background-color: #0b0b0b;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            cursor: grab;
+        }
+        body:active {
+            cursor: grabbing;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particleCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 캔버스 크기 설정
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 마우스 및 드래그 상태 관리
+        const mouse = {
+            x: null,
+            y: null,
+            px: null, // 이전 x
+            py: null, // 이전 y
+            vx: 0,    // 마우스 속도 x
+            vy: 0,    // 마우스 속도 y
+            isDragging: false
+        };
+
+        const settings = {
+            particleCount: 1200,      // 입자 개수 (밀도 조절)
+            particleRadius: 2.5,     // 입자 크기
+            mouseRadius: 100,        // 마우스 영향 범위
+            forceFactor: 0.15,       // 밀어내는 힘의 강도
+            viscosity: 0.94,         // 점성 (점도가 높을수록 끈적하게 느려짐)
+            spring: 0.02             // 원래 자리로 돌아가려는 복원력
+        };
+
+        const particles = [];
+
+        // 입자(Particle) 클래스 정의
+        class Particle {
+            constructor(x, y) {
+                this.baseX = x; // 원래 위치
+                this.baseY = y;
+                this.x = x;     // 현재 위치
+                this.y = y;
+                this.vx = 0;    // 이동 속도
+                this.vy = 0;
+            }
+
+            update() {
+                // 1. 원래 자리로 돌아가려는 복원력 (탄성)
+                let dxBase = this.baseX - this.x;
+                let dyBase = this.baseY - this.y;
+                this.vx += dxBase * settings.spring;
+                this.vy += dyBase * settings.spring;
+
+                // 2. 마우스 드래그 시 반응 (유체 질감의 핵심)
+                if (mouse.x !== null && mouse.isDragging) {
+                    let dxMouse = this.x - mouse.x;
+                    let dyMouse = this.y - mouse.y;
+                    let distance = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+
+                    if (distance < settings.mouseRadius) {
+                        // 거리에 반비례하는 힘 계산
+                        let force = (settings.mouseRadius - distance) / settings.mouseRadius;
+                        
+                        // 마우스가 움직이는 방향과 속도를 입자에 전달
+                        this.vx += (dxMouse / distance) * force * settings.forceFactor * 15;
+                        this.vy += (dyMouse / distance) * force * settings.forceFactor * 15;
+                        
+                        // 마우스 드래그 속도(물리량) 추가 반영
+                        this.vx += mouse.vx * force * 0.2;
+                        this.vy += mouse.vy * force * 0.2;
+                    }
+                }
+
+                // 3. 점성 및 마찰력 적용 후 위치 업데이트
+                this.vx *= settings.viscosity;
+                this.vy *= settings.viscosity;
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            draw() {
+                // 영상 특유의 은은하고 미세한 질감을 위한 투명도 및 색상 설정
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, settings.particleRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(240, 240, 245, 0.85)';
+                ctx.fill();
+            }
+        }
+
+        // 입자 격자 형태로 초기 배치
+        function init() {
+            particles.length = 0;
+            // 화면 전체에 촘촘하게 배치하기 위해 간격 계산
+            const cols = Math.floor(Math.sqrt(settings.particleCount * (canvas.width / canvas.height)));
+            const rows = Math.floor(settings.particleCount / cols);
+            
+            const spacingX = canvas.width / (cols + 1);
+            const spacingY = canvas.height / (rows + 1);
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    let x = spacingX + i * spacingX + (Math.random() * 4 - 2); // 미세한 무작위성 부여
+                    let y = spacingY + j * spacingY + (Math.random() * 4 - 2);
+                    particles.push(new Particle(x, y));
+                }
+            }
+        }
+
+        // 애니메이션 루프
+        function animate() {
+            // 미세한 잔상을 남겨 유체 느낌을 극대화 (매 프레임 반투명하게 덮음)
             ctx.fillStyle = 'rgba(11, 11, 11, 0.35)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // ë§ˆìš°ìŠ¤ ì†�ë�„ ê°�ì†� ê³„ì‚°
-            if (mouse.px !== null && mouse.py !== null && mouse.x !== null)
-            { mouse.vx = mouse.x - mouse.px; mouse.vy = mouse.y - mouse.py; }
+
+            // 마우스 속도 감속 계산
+            if (mouse.px !== null && mouse.py !== null && mouse.x !== null) {
+                mouse.vx = mouse.x - mouse.px;
+                mouse.vy = mouse.y - mouse.py;
+            }
             mouse.px = mouse.x;
             mouse.py = mouse.y;
-            // ì†�ë�„ê°€ ë¬´í•œížˆ ìœ ì§€ë�˜ì§€ ì•Šë�„ë¡� ê°�ì†�
-            mouse.vx *= 0.8; mouse.vy *= 0.8;
-            // ìž…ìž� ì—…ë�°ì�´íŠ¸ ë°� ê·¸ë¦¬ê¸°
-            particles.forEach(particle => { particle.update();
-                                           particle.draw();
-                                          });
-            requestAnimationFrame(animate); }
-         // ì�´ë²¤íŠ¸ ë¦¬ìŠ¤ë„ˆ ë“±ë¡� 
-         window.addEventListener('mousedown', (e) => { mouse.isDragging = true;
-                                                      mouse.x = e.clientX;
-                                                      mouse.y = e.clientY;
-                                                      mouse.px = e.clientX;
-                                                      mouse.py = e.clientY;
-                                                     });
-         window.addEventListener('mousemove', (e) =>
-            { if (!mouse.isDragging) return;
-                                                                                                                                                                                                                       mouse.x = e.clientX;
-                                                                                                                                                                                                                       mouse.y = e.clientY;
-                                                                                                                                                                                                                      });
-         window.addEventListener('mouseup', () => { mouse.isDragging = false;
-                                                  });
-         // ëª¨ë°”ì�¼ í„°ì¹˜ ì§€ì›�
-         window.addEventListener('touchstart', (e) => { mouse.isDragging = true;
-                                                       mouse.x = e.touches[0].clientX;
-                                                       mouse.y = e.touches[0].clientY;
-                                                       mouse.px = e.touches[0].clientX;
-                                                       mouse.py = e.touches[0].clientY;
-                                                      });
-         window.addEventListener('touchmove', (e) => { if (!mouse.isDragging) return;
-                                                      mouse.x = e.touches[0].clientX;
-                                                      mouse.y = e.touches[0].clientY;
-                                                     });
-         window.addEventListener('touchend', () => { mouse.isDragging = false; });
-         // ì‹¤í–‰ 
-         init();
-         animate();
-      </script>
-   </body> 
+
+            // 속도가 무한히 유지되지 않도록 감속
+            mouse.vx *= 0.8;
+            mouse.vy *= 0.8;
+
+            // 입자 업데이트 및 그리기
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // 이벤트 리스너 등록
+        window.addEventListener('mousedown', (e) => {
+            mouse.isDragging = true;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.px = e.clientX;
+            mouse.py = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!mouse.isDragging) return;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('mouseup', () => {
+            mouse.isDragging = false;
+        });
+
+        // 모바일 터치 지원
+        window.addEventListener('touchstart', (e) => {
+            mouse.isDragging = true;
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+            mouse.px = e.touches[0].clientX;
+            mouse.py = e.touches[0].clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!mouse.isDragging) return;
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        });
+
+        window.addEventListener('touchend', () => {
+            mouse.isDragging = false;
+        });
+
+        // 실행
+        init();
+        animate();
+    </script>
+</body>
 </html>
