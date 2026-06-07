@@ -5,10 +5,24 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Fluid Particle Texture Effect</title>
       <style>
-         * { margin: 0; padding: 0; box-sizing: border-box; } 
-         body { background-color: #0b0b0b; overflow: hidden; width: 100vw; height: 100vh; cursor: grab; } 
-         body:active { cursor: grabbing; }
-         canvas { display: block; width: 100%; height: 100%; }
+         * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+         } 
+         body 
+         { background-color: #0b0b0b;
+          overflow: hidden;
+          width: 100vw; height: 100vh;
+          cursor: grab; } 
+         body:active 
+         { cursor: grabbing;
+                     }
+         canvas 
+         { display: block;
+          width: 100%;
+          height: 100%;
+         }
       </style>
    </head> 
    <body>
@@ -56,14 +70,20 @@
                                              // ì�´ë�™ ì†�ë�„
                                              this.vy = 0; } update() { 
             // 1. ì›�ëž˜ ìž�ë¦¬ë¡œ ë�Œì•„ê°€ë ¤ëŠ” ë³µì›�ë ¥ (íƒ„ì„±)
-            let dxBase = this.baseX - this.x; let dyBase = this.baseY - this.y; this.vx += dxBase * settings.spring; this.vy += dyBase * settings.spring;
+            let dxBase = this.baseX - this.x;
+            let dyBase = this.baseY - this.y;
+            this.vx += dxBase * settings.spring;
+            this.vy += dyBase * settings.spring;
             // 2. ë§ˆìš°ìŠ¤ ë“œëž˜ê·¸ ì‹œ ë°˜ì�‘ (ìœ ì²´ ì§ˆê°�ì�˜ í•µì‹¬)
-            if (mouse.x !== null && mouse.isDragging) { let dxMouse = this.x - mouse.x; let dyMouse = this.y - mouse.y; let distance = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse); 
+            if (mouse.x !== null && mouse.isDragging) { let dxMouse = this.x - mouse.x;
+                                                       let dyMouse = this.y - mouse.y;
+                                                       let distance = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse); 
                                                        if (distance < settings.mouseRadius){ 
                                                           // ê±°ë¦¬ì—� ë°˜ë¹„ë¡€í•˜ëŠ” íž˜ ê³„ì‚°
                                                           let force = (settings.mouseRadius - distance) / settings.mouseRadius;
                                                           // ë§ˆìš°ìŠ¤ê°€ ì›€ì§�ì�´ëŠ” ë°©í–¥ê³¼ ì†�ë�„ë¥¼ ìž…ìž�ì—� ì „ë‹¬ 
-                                                          this.vx += (dxMouse / distance) * force * settings.forceFactor * 15; this.vy += (dyMouse / distance) * force * settings.forceFactor * 15;
+                                                          this.vx += (dxMouse / distance) * force * settings.forceFactor * 15;
+                                                          this.vy += (dyMouse / distance) * force * settings.forceFactor * 15;
                                                           // ë§ˆìš°ìŠ¤ ë“œëž˜ê·¸ ì†�ë�„(ë¬¼ë¦¬ëŸ‰) ì¶”ê°€ ë°˜ì˜� 
                                                           this.vx += mouse.vx * force * 0.2; this.vy += mouse.vy * force * 0.2; } } 
             // 3. ì �ì„± ë°� ë§ˆì°°ë ¥ ì �ìš© í›„ ìœ„ì¹˜ ì—…ë�°ì�´íŠ¸
@@ -96,17 +116,31 @@
             ctx.fillStyle = 'rgba(11, 11, 11, 0.35)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             // ë§ˆìš°ìŠ¤ ì†�ë�„ ê°�ì†� ê³„ì‚°
-            if (mouse.px !== null && mouse.py !== null && mouse.x !== null) { mouse.vx = mouse.x - mouse.px; mouse.vy = mouse.y - mouse.py; } mouse.px = mouse.x; mouse.py = mouse.y;
+            if (mouse.px !== null && mouse.py !== null && mouse.x !== null)
+            { mouse.vx = mouse.x - mouse.px; mouse.vy = mouse.y - mouse.py; }
+            mouse.px = mouse.x;
+            mouse.py = mouse.y;
             // ì†�ë�„ê°€ ë¬´í•œížˆ ìœ ì§€ë�˜ì§€ ì•Šë�„ë¡� ê°�ì†�
             mouse.vx *= 0.8; mouse.vy *= 0.8;
             // ìž…ìž� ì—…ë�°ì�´íŠ¸ ë°� ê·¸ë¦¬ê¸°
-            particles.forEach(particle => { particle.update(); particle.draw(); }); requestAnimationFrame(animate); }
+            particles.forEach(particle => { particle.update();
+                                           particle.draw();
+                                          });
+            requestAnimationFrame(animate); }
          // ì�´ë²¤íŠ¸ ë¦¬ìŠ¤ë„ˆ ë“±ë¡� 
-         window.addEventListener('mousedown', (e) => { mouse.isDragging = true; mouse.x = e.clientX; mouse.y = e.clientY; mouse.px = e.clientX; mouse.py = e.clientY; }); window.addEventListener('mousemove', (e) => { if (!mouse.isDragging) return;
+         window.addEventListener('mousedown', (e) => { mouse.isDragging = true;
+                                                      mouse.x = e.clientX;
+                                                      mouse.y = e.clientY;
+                                                      mouse.px = e.clientX;
+                                                      mouse.py = e.clientY;
+                                                     });
+         window.addEventListener('mousemove', (e) =>
+            { if (!mouse.isDragging) return;
                                                                                                                                                                                                                        mouse.x = e.clientX;
                                                                                                                                                                                                                        mouse.y = e.clientY;
                                                                                                                                                                                                                       });
-         window.addEventListener('mouseup', () => { mouse.isDragging = false; });
+         window.addEventListener('mouseup', () => { mouse.isDragging = false;
+                                                  });
          // ëª¨ë°”ì�¼ í„°ì¹˜ ì§€ì›�
          window.addEventListener('touchstart', (e) => { mouse.isDragging = true;
                                                        mouse.x = e.touches[0].clientX;
@@ -120,4 +154,8 @@
                                                      });
          window.addEventListener('touchend', () => { mouse.isDragging = false; });
          // ì‹¤í–‰ 
-         init(); animate(); </script> </body> </html>
+         init();
+         animate();
+      </script>
+   </body> 
+</html>
